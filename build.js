@@ -6,18 +6,23 @@ console.log(data)
 function getFileTreeContent(res,now) {
     let ans=""
     if (res.split('.').length > 1) {
-        let content = fs.readFileSync(`.${now}/${res}`).toString().split('\r\n').join('\\n')
+        let content = fs.readFileSync(`.${now}/${res}`).toString().split('\r\n').join('\\n').replace(/\\\/\\\//g,'\/\/').replace(/\"/g,'\\\"')
+        let stat=fs.statSync(`.${now}/${res}`)
+        let desc=content.match(/(?<===\\n)(.*)?(?=\\n\\n\\n)/)
+        if(desc==null){
+            desc=[""]
+        }
         ans += `
         "${res}":{
             name:"${res}",
             type:"article",
-            icon:"file-markdown",
+            icon:"article",
             position:"${now}/${res}",
-            bind:{
-                type:"article",
-                icon:"file-markdown",
-                content:"${content}"
-            }
+            content:"${content}",
+            description:"${desc[0]}",
+            size:"${stat.size}",
+            mtime:"${stat.mtime}",
+            ctime:"${stat.ctime}"
         },`
         return ans;
     }else{
@@ -31,14 +36,11 @@ function getFileTreeContent(res,now) {
             name:"${res}",
             type:"folder",
             icon:"folder",
-            bind:{
-                position:"${now}/${res}",
-                type:"folder",
-                icon:"folder",
-                children:{
-                    ${children}
-                }
+            position:"${now}/${res}",
+            children:{
+                ${children}
             }
+
         },`
         return ans;
     }
